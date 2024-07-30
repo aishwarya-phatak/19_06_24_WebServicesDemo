@@ -9,6 +9,9 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    
+    @IBOutlet weak var postTableView: UITableView!
+    
     var url : URL?
     var urlRequest : URLRequest?
     var urlSession : URLSession?
@@ -18,6 +21,19 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         jsonSerialization()
+        initializeViews()
+        registerXIBWithPostTableViewCell()
+        print(UserDefaults.standard.string(forKey: "username")!)
+    }
+    
+    private func initializeViews(){
+        postTableView.dataSource = self
+        postTableView.delegate = self
+    }
+    
+    private func registerXIBWithPostTableViewCell(){
+        let uiNIb = UINib(nibName: Constants.reuseIdentifierForPostTableViewCell, bundle: nil)
+        self.postTableView.register(uiNIb, forCellReuseIdentifier: Constants.reuseIdentifierForPostTableViewCell)
     }
     
     private func jsonSerialization(){
@@ -56,7 +72,46 @@ class ViewController: UIViewController {
             }catch{
                 print(error)
             }
+            
+            DispatchQueue.main.async {
+                self.postTableView.reloadData()
+            }
         }
         urlSessionDataTask?.resume()
+    }
+}
+
+
+extension ViewController : UITableViewDataSource{
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        posts.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let postTableViewCell = self.postTableView.dequeueReusableCell(withIdentifier: Constants.reuseIdentifierForPostTableViewCell, for: indexPath) as! PostTableViewCell
+        
+        postTableViewCell.layer.borderColor = CGColor(srgbRed: 50.0, green: 0.0, blue: 100.0, alpha: 4.0)
+        postTableViewCell.layer.borderWidth = 5.0
+        postTableViewCell.layer.cornerRadius = 20.0
+        
+        //selecting custom colour added under assets folder
+        postTableViewCell.postUserIdLabel.backgroundColor = UIColor(named: "ColourPurple")
+        
+        postTableViewCell.postUserIdLabel.text = String(posts[indexPath.row].userId)
+        postTableViewCell.postTitleLabel.text = posts[indexPath.row].title
+        postTableViewCell.postBodyLabel.text = posts[indexPath.row].body
+        
+        return postTableViewCell
+    }
+}
+
+
+extension ViewController : UITableViewDelegate{
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 325.0
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print(indexPath.row)
     }
 }
